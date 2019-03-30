@@ -3,6 +3,7 @@
 
 /**
  动态内存分配 
+ https://zhuanlan.zhihu.com/p/40536998
 */
 
 void func(int** address){
