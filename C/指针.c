@@ -4,6 +4,7 @@
 /**
  指针就是内存地址
  内地地址就是指针 
+ 指针的长度
 */
 int main(){
    
@@ -44,7 +45,14 @@ int main(){
   
    *p =  200;
    printf("修改*p值后，i的值是：%d\n",i); 
+
+   int* iPoint;
+   char* cPoint;
+     
+   printf("iPoint的长度==%d\n",sizeof(iPoint));  
+    
+   printf("cPoint的长度==%d\n",sizeof(cPoint));  
    
    return 0;
-  
 }     
+  
