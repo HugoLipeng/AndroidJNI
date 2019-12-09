@@ -16,6 +16,11 @@ set(my_lib_path ${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/${ANDROID_ABI})
 add_library(avcodec SHARED IMPORTED)
 set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION ${my_lib_path}/libavcodec.so)
 #注意：Ndk版本不同CMakeLists.txt的位置是不同的，低版本的CMakeLists.txt文件是放在src目录中的
+add_library(avformat SHARED IMPORTED)
+set_target_properties(avformat PROPERTIES IMPORTED_LOCATION ${my_lib_path}/libavformat.so)
+
+add_library(avutil SHARED IMPORTED)
+set_target_properties(avutil PROPERTIES IMPORTED_LOCATION ${my_lib_path}/libavutil.so)
 
 add_library( # Sets the name of the library.
         native-lib
@@ -45,7 +50,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         native-lib
-        avcodec
+        avcodec avformat avutil
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})
