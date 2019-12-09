@@ -9,6 +9,13 @@ cmake_minimum_required(VERSION 3.4.1)
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
+#添加头文件路径（相对于本文件路径）
+include_directories(include)
+#设置ffmpeg库所在路径的变量
+set(my_lib_path ${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/${ANDROID_ABI})
+add_library(avcodec SHARED IMPORTED)
+set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION ${my_lib_path}/libavcodec.so)
+#注意：Ndk版本不同CMakeLists.txt的位置是不同的，低版本的CMakeLists.txt文件是放在src目录中的
 
 add_library( # Sets the name of the library.
         native-lib
@@ -38,7 +45,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         native-lib
-
+        avcodec
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})
