@@ -7,6 +7,7 @@
 extern "C"{
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavcodec/jni.h>
 }
 #include<iostream>
 using namespace std;
@@ -14,6 +15,24 @@ using namespace std;
 static double r2d(AVRational r)
 {
     return r.num==0||r.den == 0 ? 0 :(double)r.num/(double)r.den;
+}
+
+//当前时间戳 clock
+long long GetNowMs()
+{
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    int sec = tv.tv_sec%360000;
+    long long t = sec*1000+tv.tv_usec/1000;
+    return t;
+}
+
+extern "C"
+JNIEXPORT
+jint JNI_OnLoad(JavaVM *vm,void *res)
+{
+    av_jni_set_java_vm(vm,0);
+    return JNI_VERSION_1_4;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -82,10 +101,69 @@ Java_com_hugo_ffmpegstepbystep_MainActivity_stringFromJNI(
     audioStream = av_find_best_stream(ic,AVMEDIA_TYPE_AUDIO,-1,-1,NULL,0);
     LOGW("av_find_best_stream audioStream = %d",audioStream);
 
+    //////////////////////////////////////////////////////////
+    //打开视频解码器
+    //软解码器
+    AVCodec *codec = avcodec_find_decoder(ic->streams[videoStream]->codecpar->codec_id);
+    //硬解码
+    codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    if(!codec)
+    {
+        LOGW("avcodec_find failed!");
+        return env->NewStringUTF(hello.c_str());
+    }
+    //解码器初始化
+    AVCodecContext *vc = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(vc,ic->streams[videoStream]->codecpar);
+
+    vc->thread_count = 8;
+    //打开解码器
+    re = avcodec_open2(vc,0,0);
+    //vc->time_base = ic->streams[videoStream]->time_base;
+    LOGW("vc timebase = %d/ %d",vc->time_base.num,vc->time_base.den);
+    if(re != 0)
+    {
+        LOGW("avcodec_open2 video failed!");
+        return env->NewStringUTF(hello.c_str());
+    }
+
+    //////////////////////////////////////////////////////////
+    //打开音频解码器
+    //软解码器
+    AVCodec *acodec = avcodec_find_decoder(ic->streams[audioStream]->codecpar->codec_id);
+    //硬解码
+    //codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    if(!acodec)
+    {
+        LOGW("avcodec_find failed!");
+        return env->NewStringUTF(hello.c_str());
+    }
+    //解码器初始化
+    AVCodecContext *ac = avcodec_alloc_context3(acodec);
+    avcodec_parameters_to_context(ac,ic->streams[audioStream]->codecpar);
+    ac->thread_count = 8;
+    //打开解码器
+    re = avcodec_open2(ac,0,0);
+    if(re != 0)
+    {
+        LOGW("avcodec_open2  audio failed!");
+        return env->NewStringUTF(hello.c_str());
+    }
     //读取帧数据
     AVPacket *pkt = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+    long long start = GetNowMs();
+    int frameCount = 0;
     for(;;)
     {
+        //超过三秒
+        if(GetNowMs() - start >= 3000)
+        {
+            LOGW("now decode fps is %d",frameCount/3);
+            start = GetNowMs();
+            frameCount = 0;
+        }
+
         int re = av_read_frame(ic,pkt);
         if(re != 0)
         {
@@ -95,12 +173,50 @@ Java_com_hugo_ffmpegstepbystep_MainActivity_stringFromJNI(
             av_seek_frame(ic,videoStream,pos,AVSEEK_FLAG_BACKWARD|AVSEEK_FLAG_FRAME );
             continue;
         }
-        LOGW("stream = %d size =%d pts=%lld flag=%d",
-             pkt->stream_index,pkt->size,pkt->pts,pkt->flags
-        );
+        //只测试视频
+        /*if(pkt->stream_index !=videoStream)
+        {
+            continue;
+        }*/
+        //LOGW("stream = %d size =%d pts=%lld flag=%d",
+        //     pkt->stream_index,pkt->size,pkt->pts,pkt->flags
+        //);
+
+        AVCodecContext *cc = vc;
+        if(pkt->stream_index == audioStream)
+            cc=ac;
+
+        //发送到线程中解码
+        re = avcodec_send_packet(cc,pkt);
+        //清理
+        int p = pkt->pts;
+        av_packet_unref(pkt);
+
+        if(re != 0)
+        {
+            LOGW("avcodec_send_packet failed!");
+            continue;
+        }
+        for(;;)
+        {
+            re = avcodec_receive_frame(cc,frame);
+            if(re !=0)
+            {
+                //LOGW("avcodec_receive_frame failed!");
+                break;
+            }
+            //LOGW("avcodec_receive_frame %lld",frame->pts);
+            //如果是视频帧
+            if(cc == vc)
+            {
+                frameCount++;
+            }
+
+        }
+
         //////////////////////
 
-        av_packet_unref(pkt);
+
     }
     // 关闭上下文
     avformat_close_input(&ic);
