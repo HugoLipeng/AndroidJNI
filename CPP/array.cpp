@@ -9,6 +9,11 @@ int main()
 
     p = balance;
 
+    // 数组的长度
+    cout << "sizeof(balance)" << sizeof(balance) << endl;
+    cout << "sizeof(balance[0])" << sizeof(balance[0]) << endl;
+    cout << "数组的长度：" << sizeof(balance)/sizeof(balance[0]) << endl;
+
     // 输出数组中每个元素的值
     cout << "使用指针的数组值 " << endl;
     for (int i = 0; i < 5; i++)
