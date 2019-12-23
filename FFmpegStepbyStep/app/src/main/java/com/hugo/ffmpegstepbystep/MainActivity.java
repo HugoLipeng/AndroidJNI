@@ -42,5 +42,6 @@ public class MainActivity extends AppCompatActivity {
      * which is packaged with this application.
      */
     public native String stringFromJNI();
+    native int test(int[] i,String[] j);
     public native boolean Open(String url,Object handle);
 }

@@ -4,6 +4,8 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN,"testff",__VA_ARGS__)
+//  __VA_ARGS__ 代表... 可变参数
+#define  LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"JNI",__VA_ARGS__);
 
 extern "C"{
 #include <libavcodec/avcodec.h>
@@ -38,7 +40,8 @@ jint JNI_OnLoad(JavaVM *vm,void *res)
     return JNI_VERSION_1_4;
 }
 
-extern "C" JNIEXPORT jstring JNICALL
+extern "C"
+JNIEXPORT jstring JNICALL
 Java_com_hugo_ffmpegstepbystep_MainActivity_stringFromJNI(
         JNIEnv *env,
         jobject /* this */) {
@@ -341,4 +344,44 @@ Java_com_hugo_ffmpegstepbystep_XPlay_Open(JNIEnv *env, jobject instance, jstring
 
 
     env->ReleaseStringUTFChars(url_, path);
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_hugo_ffmpegstepbystep_MainActivity_test(JNIEnv *env, jobject instance, jintArray i_,
+                                                 jobjectArray j_) {
+    // 指向数组首元素地址
+    // 第二个参数：指针：指向内存地址
+    // 在这个地址存数据
+    // true：是拷贝的一个新数据 (新申请内存)
+    // false: 就是使用的java的数组 (地址)
+    jint *i = env->GetIntArrayElements(i_, NULL);
+
+    //C  调用： (*env)->GetIntArrayElements(env,i_, NULL);
+    //获取数组长度
+    int32_t length = env->GetArrayLength(i_);
+    for (int k = 0; k < length; ++k) {
+        LOGE("获取java的参数:%d",*(i+k));
+        //修改值
+        *(i+k) = 100;
+    }
+    // 参数3：mode
+    // 0:  刷新java数组 并 释放c/c++数组
+    // 1 = JNI_COMMIT:
+    //      只刷新java数组
+    // 2 = JNI_ABORT
+    //      只释放
+    env->ReleaseIntArrayElements(i_, i, 0);
+    //  (*env)->ReleaseIntArrayElements(env,i_, i, 0);
+
+
+    jint strlength = env->GetArrayLength(j_);
+    for (int i = 0; i < strlength; ++i) {
+        jstring str = static_cast<jstring>(env->GetObjectArrayElement(j_, i));
+        //转成可操作的c/c++字符串
+        const char* s = env->GetStringUTFChars(str,0);
+        LOGE("获取java的参数:%s",s);
+        env->ReleaseStringUTFChars(str,s);
+    }
+    return 100;
 }
