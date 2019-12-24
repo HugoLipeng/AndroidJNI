@@ -35,6 +35,15 @@ public class MainActivity extends AppCompatActivity {
         String str = "/sdcard/1080.mp4";
         //Open( str,this );
         //tv.setText( stringFromJNI() );
+
+        // 1、传递数组
+//        int i[] = {11,22,33,44};
+//        String j[] = {"hello","world"};
+//        test(i,j);
+//        Log.e("Java","int数组："+ Arrays.toString(i));
+        //  2、传递引用类型
+//        Bean bean = new Bean();
+//        passObject(bean,"hugo");
     }
 
     /**
@@ -43,5 +52,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
     native int test(int[] i,String[] j);
+    //传递java class 给native使用
+    native void passObject(Bean bean,String str);
     public native boolean Open(String url,Object handle);
 }

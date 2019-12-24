@@ -385,3 +385,40 @@ Java_com_hugo_ffmpegstepbystep_MainActivity_test(JNIEnv *env, jobject instance, 
     }
     return 100;
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_hugo_ffmpegstepbystep_MainActivity_passObject(JNIEnv *env, jobject instance, jobject bean,
+                                                       jstring str_) {
+    const char *str = env->GetStringUTFChars(str_, 0);
+
+    //反射调用java方法
+    //1、获取java对应的class对象
+    jclass beanCls = env->GetObjectClass(bean);
+    //2、找到要调用的方法
+    // 参数3： 签名
+    //get方法
+    jmethodID  getI = env->GetMethodID(beanCls,"getI","()I");
+    //3、调用
+    jint i = env->CallIntMethod(bean,getI);
+    LOGE("C++ 调用Java getI方法:%d",i);
+
+    //set 方法
+    jmethodID  setI = env->GetMethodID(beanCls,"setI","(I)V");
+    env->CallVoidMethod(bean,setI,200);
+
+    //static 方法
+    jmethodID  printInfo = env->GetStaticMethodID(beanCls,"printInfo","(Ljava/lang/String;)V");
+    //创建java字符串
+    jstring  str2 = env->NewStringUTF("我是Bean类的静态方法，被C++调用");
+    env->CallStaticVoidMethod(beanCls,printInfo, str2);
+    //释放局部引用
+    env->DeleteLocalRef(str2);
+
+
+    //修改属性值
+    jfieldID  fileId = env->GetFieldID(beanCls,"i","I");
+    env->SetIntField(bean,fileId,300);
+
+    
+    env->ReleaseStringUTFChars(str_, str);
+}
