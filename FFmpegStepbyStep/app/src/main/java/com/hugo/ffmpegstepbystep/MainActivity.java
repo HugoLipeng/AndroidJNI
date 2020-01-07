@@ -55,4 +55,5 @@ public class MainActivity extends AppCompatActivity {
     //传递java class 给native使用
     native void passObject(Bean bean,String str);
     public native boolean Open(String url,Object handle);
+    public native String TestOpenSL();
 }
