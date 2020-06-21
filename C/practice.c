@@ -1,9 +1,10 @@
-# include<stdio.h>
+# include <stdio.h>
 
 #define PI 3.1415
 
 int main(){
-    printf("hello world!");
+    
+    printf("hello world!\a");
     // unsigned char *p1;
     // unsigned char *p2;
     // p1=(unsigned char *)0x801000;
