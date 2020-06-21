@@ -1,9 +1,21 @@
 # AndroidJNI
 AndroidJNI step by step
 
+### mac下C编译运行方式
+```c
+g++ -o <文件名> <文件名>.c  //编译
+ ./<文件名>          //执行
+```
 
-指针相关总结：  
-通过被调用函数修改主调函数普通变量的值  
-1，实参必须是普通变量的地址；  
-2，形参必须是指针变量；  
-3，被调用函数中通过修改 *形参名的方式修改主调函数的相关变量的值  
+### mac下C++编译运行方式
+```c
+g++ -o <文件名> <文件名>.cpp  //编译
+ ./<文件名>          //执行
+```
+
+### CMake
+CMake Cookbook这本书的[民间中文翻译版本](https://chenxiaowei.gitbook.io/cmake-cookbook/)
+
+
+
+
